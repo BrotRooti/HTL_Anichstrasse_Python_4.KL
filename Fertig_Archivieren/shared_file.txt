@@ -1,0 +1,10 @@
+Process 0 is writing to the file.
+Process 0 has finished writing.
+Process 1 is writing to the file.
+Process 1 has finished writing.
+Process 2 is writing to the file.
+Process 2 has finished writing.
+Process 3 is writing to the file.
+Process 3 has finished writing.
+Process 4 is writing to the file.
+Process 4 has finished writing.
