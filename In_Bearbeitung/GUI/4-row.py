@@ -6,17 +6,18 @@ class TicTacToeGame:
     def __init__(self):
         self.current_player = "X"
         self.reset_game()
+        self.game_over = False
 
     def reset_game(self):
         self.board = [["" for _ in range(3)] for _ in range(3)]
         self.current_player = "X"
         self.game_over = False
 
-    def make_move(self, i, j):
-        if self.game_over or self.board[i][j] != "":
+    def make_move(self, row, col):
+        if self.game_over or self.board[row][col] != "":
             return False
 
-        self.board[i][j] = self.current_player
+        self.board[row][col] = self.current_player
         if self.check_winner():
             self.game_over = True
             return f"Player {self.current_player} wins!"
@@ -46,23 +47,26 @@ class TicTacToeGame:
         return True
 
 
-class TicTacToeUI(ctk.CTkFrame):
-    def __init__(self, master=None):
-        super().__init__(master)
-        self.master = master
-        self.pack()
+class TicTacToeUI(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+        self.title("Tic Tac Toe")
         self.game = TicTacToeGame()
         self.create_widgets()
 
     def create_widgets(self):
         self.buttons = [[ctk.CTkButton for _ in range(3)] for _ in range(3)]
-        for i in range(3):
-            for j in range(3):
-                self.buttons[i][j] = ctk.CTkButton(self, text="", width=100, height=100, command=lambda i=i, j=j: self.on_button_click(i, j))
-                self.buttons[i][j].grid(row=i, column=j)
+        self.rowconfigure((0, 1, 2,), weight=8)
+        self.rowconfigure(3, weight=2)
+        self.rowconfigure(4, weight=1)
+        self.columnconfigure((0, 1, 2), weight=1)
+        for row in range(3):
+            for col in range(3):
+                self.buttons[row][col] = ctk.CTkButton(self, text=" ", width=100, height=100 , command=lambda row=row, col=col: self.on_button_click(row, col))
+                self.buttons[row][col].grid( row=row, column=col, padx=5, pady=5, sticky="nsew")
 
-        self.reset_button = ctk.CTkButton(self, text="Reset", command=self.reset_game, font=("Arial", 24))
-        self.reset_button.grid(row=3, column=0, columnspan=3)
+        self.reset_button = ctk.CTkButton(self, text="Reset",fg_color="red" ,command=self.reset_game, font=("Arial", 24))
+        self.reset_button.grid(row=3, column=0, columnspan=3, sticky="ns")
 
         self.status_label = ctk.CTkLabel(self, text="Player X's turn", font=("Arial", 24))
         self.status_label.grid(row=4, column=0, columnspan=3)
@@ -70,15 +74,15 @@ class TicTacToeUI(ctk.CTkFrame):
     def reset_game(self):
         self.game.reset_game()
         self.status_label.configure(text="Player X's turn")
-        for i in range(3):
-            for j in range(3):
-                self.buttons[i][j].configure(text="", state=ctk.NORMAL)
+        for row in range(3):
+            for col in range(3):
+                self.buttons[row][col].configure(text="", state=ctk.NORMAL)
 
-    def on_button_click(self, i, j):
+    def on_button_click(self, row, col):
         old_player = self.game.current_player
-        result = self.game.make_move(i, j)
+        result = self.game.make_move(row, col)
         if result:
-            self.buttons[i][j].configure(text=old_player, state=ctk.DISABLED, font=("Arial", 72))
+            self.buttons[row][col].configure(text=old_player, text_color_disabled="black", state=ctk.DISABLED, font=("Arial", 72, "bold"))
 
             if result.endswith("wins!") or result.endswith("draw!"):
                 CTkMessagebox.CTkMessagebox(message=result, title="Game Over")
@@ -90,9 +94,9 @@ class TicTacToeUI(ctk.CTkFrame):
                 self.disable_buttons()
 
     def disable_buttons(self):
-        for i in range(3):
-            for j in range(3):
-                self.buttons[i][j].configure(state=ctk.DISABLED)
+        for row in range(3):
+            for col in range(3):
+                self.buttons[row][col].configure(state=ctk.DISABLED)
 
 
 
@@ -101,7 +105,6 @@ class TicTacToeUI(ctk.CTkFrame):
 
 
 if __name__ == "__main__":
-    root = ctk.CTk()
-    app = TicTacToeUI(master=root)
-    root.mainloop()
+    app = TicTacToeUI()
+    app.mainloop()
 
