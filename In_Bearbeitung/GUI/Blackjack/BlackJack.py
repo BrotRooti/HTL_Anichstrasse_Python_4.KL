@@ -59,7 +59,7 @@ class App(ctk.CTk):
         super().__init__()
 
         self.title("Blackjack")
-        self.geometry("400x400")
+        self.geometry("800x800")
         self.game = Game()
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
