@@ -5,8 +5,14 @@ Emil & Phillip
 
 https://github.com/MOD0912/Blackjack?tab=readme-ov-file#blackjack
 """
-import customtkinter as ctk
 import random
+from http.client import responses
+
+import customtkinter as ctk
+import CTkMessagebox as msgbox
+
+
+
 
 
 
@@ -46,6 +52,10 @@ class Game:
         self.person_values[person] += card_value
 
         #return f"{card[1:]} of {self.colors[card[0]]}"
+    def reset_game(self):
+        self.deck = []
+        self.person_values = {"Player":0, "Dealer":0}
+        self.decks_shuffle()
 
 
 class GameFrame(ctk.CTkFrame):
@@ -59,7 +69,7 @@ class App(ctk.CTk):
         super().__init__()
 
         self.title("Blackjack")
-        self.geometry("800x800")
+        self.geometry("600x600")
         self.game = Game()
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -82,23 +92,39 @@ class App(ctk.CTk):
         print(self.game.person_values["Player"])
         if self.game.person_values["Player"] > 21:
             print("You lost")
-            self.game_frame.label.configure(text="You lost")
+            self.end_card("lost")
 
     def stand_function(self):
         while self.game.person_values["Dealer"] < 16:
             self.game.pull_card("Dealer")
         if self.game.person_values["Dealer"] > 21:
-            self.game_frame.label.configure(text="You won")
+            self.end_card("win")
             print("You won")
         elif self.game.person_values["Dealer"] > self.game.person_values["Player"]:
             print("You lost")
-            self.game_frame.label.configure(text="You lost")
+            self.end_card("lost")
         elif self.game.person_values["Dealer"] == self.game.person_values["Player"]:
             print("It's a tie")
-            self.game_frame.label.configure(text="It's a tie")
+            self.end_card("tie")
         else:
             print("You won")
-            self.game_frame.label.configure(text="You lost")
+            self.end_card("lost")
+
+    def end_card(self,state):
+        if state == "win":
+            message = "You won"
+        elif state == "lose":
+            message = "You lost"
+        else:
+            message = "It's a tie"
+
+        msg = msgbox.CTkMessagebox(title="Game Over", message=message, options=["Play again", "Quit"])
+        response = msg.get()
+
+        if response == "Play again":
+            self.game.reset_game()
+        elif response == "Quit":
+            self.quit_function()
 
     def quit_function(self):
         quit()
