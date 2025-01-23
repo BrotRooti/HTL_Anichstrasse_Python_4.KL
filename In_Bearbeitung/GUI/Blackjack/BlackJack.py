@@ -10,11 +10,10 @@ from http.client import responses
 
 import customtkinter as ctk
 import CTkMessagebox as msgbox
-
-
-
-
-
+import PIL
+from PIL import Image, ImageTk
+import os
+import pywinstyles
 
 class Game:
     def __init__(self):
@@ -48,8 +47,10 @@ class Game:
 
     def pull_card(self,person):
         card = self.deck.pop(0)
+        print(card)
         card_value = self.get_card_value(card, person)
         self.person_values[person] += card_value
+        return card
 
         #return f"{card[1:]} of {self.colors[card[0]]}"
     def reset_game(self):
@@ -69,59 +70,119 @@ class App(ctk.CTk):
         super().__init__()
 
         self.title("Blackjack")
-        self.geometry("600x600")
+        self.geometry("1920x1080")
         self.game = Game()
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=1)
+        '''
+        self.grid_columnconfigure(3, weight=1)
+        self.grid_columnconfigure(4, weight=1)
+        self.grid_columnconfigure(5, weight=1)
+        '''
         self.grid_rowconfigure(0, weight=1)
 
+        self.bgimage = PIL.Image.open("Bg.jpg")
+        self.bg_image = ctk.CTkImage(self.bgimage, size=(1920, 1080))
+
         self.game_frame = GameFrame(master=self)
-        self.game_frame.grid(row=0, column=0, rowspan=2, columnspan=3, sticky="nsew")
+        self.game_frame.grid(row=0, column=0, rowspan=2, columnspan=6, sticky="nsew")
+
+        self.bg_lbl = ctk.CTkLabel(master=self, text="", image=self.bg_image)
+        self.bg_lbl.grid(row=0, column=0, rowspan=2, columnspan=6, sticky="nsew")
 
         self.button_hit = ctk.CTkButton(master=self, text="Hit", command=self.hit_function)
         self.button_stand = ctk.CTkButton(master=self, text="Stand", command=self.stand_function)
         self.button_quit = ctk.CTkButton(master=self, text="Quit", command=self.quit_function)
 
-        self.button_hit.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
-        self.button_stand.grid(row=2, column=1, padx=10, pady=10, sticky="nsew")
-        self.button_quit.grid(row=2, column=2, padx=10, pady=10, sticky="nsew")
+        self.player_frame = ctk.CTkFrame(self)
+        self.dealer_frame = ctk.CTkFrame(self)
+        self.player_value_label = ctk.CTkLabel(self, text="Player: 0")
+        self.dealer_value_label = ctk.CTkLabel(self, text="Dealer: 0")
+
+
+        self.player_value_label.grid(row=2, column=0, columnspan=3, sticky="sew")
+        self.dealer_value_label.grid(row=0, column=0, columnspan=3, sticky="new")
+        self.player_frame.grid(row=3, column=0, columnspan=3, sticky="new")
+        self.dealer_frame.grid(row=0, column=0, columnspan=3, sticky="new", pady=28)
+        #pywinstyles.set_opacity(self.player_frame, value=0.5, color="#000001")
+        #pywinstyles.set_opacity(self.dealer_frame, value=0.5, color="#000001")
+
+        self.button_hit.grid(row=4, column=0, padx=10, pady=10, sticky="nsew")
+        self.button_stand.grid(row=4, column=1, padx=10, pady=10, sticky="nsew")
+        self.button_quit.grid(row=4, column=2, padx=10, pady=10, sticky="nsew")
+
+    def load_card_image(self, card):
+        card_path = f"cards/{card}.png"
+
+        if not os.path.exists(card_path):
+            print(f"Warning: Image not found for card {card}")
+            return None
+
+        image = Image.open(card_path)
+        #image = ctk.CTkImage(image, size=(100, 150))
+        image = image.resize((300, 600))
+        #return ImageTk.PhotoImage(image)
+        return image
+
+    def display_card(self, person, card):
+        image = self.load_card_image(card)
+        if image:
+            if person == "Player":
+                lbl = ctk.CTkLabel(self.player_frame, image=ctk.CTkImage(image,size=(100,150)), text="")
+                self.player_value_label.configure(text=f"Player: {self.game.person_values['Player']}")
+
+            else:
+                lbl = ctk.CTkLabel(self.dealer_frame, image=ctk.CTkImage(image,size=(100,150)), text="")
+                self.dealer_value_label.configure(text=f"Dealer: {self.game.person_values['Dealer']}")
+            lbl.image = image
+            lbl.pack(side="left")
 
     def hit_function(self):
-        self.game.pull_card("Player")
+        card = self.game.pull_card("Player")
+        self.display_card("Player", card)
         print(self.game.person_values["Player"])
+
         if self.game.person_values["Player"] > 21:
-            print("You lost")
-            self.end_card("lost")
+
+            self.end_card("lose")
 
     def stand_function(self):
         while self.game.person_values["Dealer"] < 16:
-            self.game.pull_card("Dealer")
+            card = self.game.pull_card("Dealer")
+            self.display_card("Dealer", card)
+
         if self.game.person_values["Dealer"] > 21:
             self.end_card("win")
-            print("You won")
         elif self.game.person_values["Dealer"] > self.game.person_values["Player"]:
-            print("You lost")
-            self.end_card("lost")
+            self.end_card("lose")
         elif self.game.person_values["Dealer"] == self.game.person_values["Player"]:
-            print("It's a tie")
             self.end_card("tie")
         else:
-            print("You won")
-            self.end_card("lost")
+            self.end_card("lose")
 
     def end_card(self,state):
         if state == "win":
-            message = "You won"
+            message = "You won, Dealer busted"
         elif state == "lose":
-            message = "You lost"
-        else:
+            message = "You lost, Dealer won"
+        elif state == "tie":
             message = "It's a tie"
+        else:
+            print(state)
+            raise ValueError("Invalid state")
+
 
         msg = msgbox.CTkMessagebox(title="Game Over", message=message, options=["Play again", "Quit"])
         response = msg.get()
 
         if response == "Play again":
+            for c in self.player_frame.winfo_children():
+                c.destroy()
+            for c in self.dealer_frame.winfo_children():
+                c.destroy()
+            self.player_value_label.configure(text="Player: 0")
+            self.dealer_value_label.configure(text="Dealer: 0")
             self.game.reset_game()
         elif response == "Quit":
             self.quit_function()
