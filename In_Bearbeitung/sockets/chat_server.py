@@ -54,7 +54,9 @@ class Client(threading.Thread):
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((HOST, PORT))
 s.listen()
+
 print("Server is listening on port", PORT)
+
 while True:
     try:
         conn, addr = s.accept()
